@@ -67,7 +67,10 @@ struct NetWatchDashboard: View {
                         Button("Clear Mock Rules", role: .destructive) {
                             netWatch.clearMockRules()
                         }
-                        Toggle("Enabled", isOn: $netWatch.isEnabled)
+                        Button("Stop Intercepting", role: .destructive) {
+                            netWatch.stop()
+                            netWatch.isPresented = false
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }

@@ -22,12 +22,19 @@ public struct NetWatchTriggerButton: View {
     }
 
     public var body: some View {
+        #if DEBUG
+        buttonContent
+        #else
+        if NetWatch.shared.isEnabled {
+            buttonContent
+        }
+        #endif
+    }
+
+    private var buttonContent: some View {
         Button {
             let netWatch = NetWatch.shared
-            if !netWatch.isEnabled {
-                netWatch.isEnabled = true
-            }
-            netWatch.isPresented = true
+            netWatch.show()
         } label: {
             switch style {
             case .floating:

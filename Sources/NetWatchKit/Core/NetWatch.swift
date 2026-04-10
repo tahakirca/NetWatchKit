@@ -13,7 +13,7 @@ public final class NetWatch {
 
     // MARK: - Public State
 
-    public var isEnabled: Bool = false {
+    public private(set) var isEnabled: Bool = false {
         didSet {
             NetWatchState.shared.isEnabled = isEnabled
             if isEnabled {
@@ -24,6 +24,9 @@ public final class NetWatch {
 
     public var isPresented: Bool = false
     public private(set) var records: [NetworkRecord] = []
+
+    /// Whether this instance was force-enabled for production use.
+    private var isForceEnabled = false
 
     // MARK: - Internal
 
@@ -42,8 +45,26 @@ public final class NetWatch {
     }
 
     /// Start intercepting network requests.
-    public func start() {
+    ///
+    /// In **Debug** builds, calling `start()` is enough.
+    /// In **Release** builds, you must pass `forceEnabled: true` explicitly —
+    /// otherwise the call is ignored and nothing is intercepted.
+    ///
+    /// ```swift
+    /// // Debug — just works
+    /// NetWatch.shared.start()
+    ///
+    /// // Production — explicit opt-in
+    /// NetWatch.shared.start(forceEnabled: true)
+    /// ```
+    public func start(forceEnabled: Bool = false) {
+        #if DEBUG
         isEnabled = true
+        #else
+        guard forceEnabled else { return }
+        isForceEnabled = true
+        isEnabled = true
+        #endif
     }
 
     /// Stop intercepting.
