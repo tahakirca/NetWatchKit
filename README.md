@@ -64,6 +64,18 @@ NetWatch.register(to: config)
 let session = URLSession(configuration: config)
 ```
 
+## Screenshots
+
+<p align="center">
+  <img src="Assets/requests.png" width="230" alt="Request List" />
+  <img src="Assets/request-detail.png" width="230" alt="Request Detail" />
+  <img src="Assets/mock-rules.png" width="230" alt="Mock Rules" />
+</p>
+<p align="center">
+  <img src="Assets/mock-editor.png" width="230" alt="Mock Editor" />
+  <img src="Assets/request-builder.png" width="230" alt="Request Builder" />
+</p>
+
 ## Debug Panel
 
 The panel has three tabs:
