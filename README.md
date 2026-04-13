@@ -66,15 +66,18 @@ let session = URLSession(configuration: config)
 
 ## Screenshots
 
-<p align="center">
-  <img src="Assets/requests.png" width="230" alt="Request List" />
-  <img src="Assets/request-detail.png" width="230" alt="Request Detail" />
-  <img src="Assets/mock-rules.png" width="230" alt="Mock Rules" />
-</p>
-<p align="center">
-  <img src="Assets/mock-editor.png" width="230" alt="Mock Editor" />
-  <img src="Assets/request-builder.png" width="230" alt="Request Builder" />
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="Assets/requests.png" width="200" /><br /><b>Request List</b><br />Live feed with method, status,<br />duration, and size</td>
+    <td align="center"><img src="Assets/request-detail.png" width="200" /><br /><b>Response Detail</b><br />Headers and pretty-printed<br />JSON body</td>
+    <td align="center"><img src="Assets/mock-rules.png" width="200" /><br /><b>Mock Rules</b><br />Active rules with method,<br />status code, and delay</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="Assets/mock-editor.png" width="200" /><br /><b>Mock Editor</b><br />Status code, delay, and<br />custom response body</td>
+    <td align="center"><img src="Assets/request-builder.png" width="200" /><br /><b>Request Builder</b><br />Manual API testing with<br />method, URL, and headers</td>
+    <td></td>
+  </tr>
+</table>
 
 ## Debug Panel
 
