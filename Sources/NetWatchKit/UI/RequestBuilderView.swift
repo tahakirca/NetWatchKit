@@ -28,6 +28,17 @@ struct RequestBuilderView: View {
         method != "GET" && method != "HEAD"
     }
 
+    private var lastAuthToken: String? {
+        NetWatch.shared.records
+            .lazy
+            .compactMap { $0.request.headers["Authorization"] }
+            .first
+    }
+
+    private var headersContainAuth: Bool {
+        headers.contains { $0.key.lowercased() == "authorization" }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -81,6 +92,20 @@ struct RequestBuilderView: View {
                             .foregroundStyle(.secondary)
 
                         Spacer()
+
+                        if lastAuthToken != nil && !headersContainAuth {
+                            Button {
+                                withAnimation(.snappy(duration: 0.2)) {
+                                    if let token = lastAuthToken {
+                                        headers.append(HeaderEntry(key: "Authorization", value: token))
+                                    }
+                                }
+                            } label: {
+                                Label("Add Token", systemImage: "key.fill")
+                                    .font(.caption2.weight(.medium))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
 
                         Button {
                             withAnimation(.snappy(duration: 0.2)) {
@@ -373,8 +398,13 @@ struct RequestBuilderView: View {
 
 private struct HeaderEntry: Identifiable {
     let id = UUID()
-    var key = ""
-    var value = ""
+    var key: String
+    var value: String
+
+    init(key: String = "", value: String = "") {
+        self.key = key
+        self.value = value
+    }
 }
 
 private struct BuilderResult {
