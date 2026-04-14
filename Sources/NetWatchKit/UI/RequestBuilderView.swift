@@ -29,10 +29,14 @@ struct RequestBuilderView: View {
     }
 
     private var lastAuthToken: String? {
-        NetWatch.shared.records
-            .lazy
-            .compactMap { $0.request.headers["Authorization"] }
-            .first
+        for record in NetWatch.shared.records {
+            for (key, value) in record.request.headers {
+                if key.lowercased() == "authorization" {
+                    return value
+                }
+            }
+        }
+        return nil
     }
 
     private var headersContainAuth: Bool {
@@ -93,12 +97,10 @@ struct RequestBuilderView: View {
 
                         Spacer()
 
-                        if lastAuthToken != nil && !headersContainAuth {
+                        if let token = lastAuthToken, !headersContainAuth {
                             Button {
                                 withAnimation(.snappy(duration: 0.2)) {
-                                    if let token = lastAuthToken {
-                                        headers.append(HeaderEntry(key: "Authorization", value: token))
-                                    }
+                                    headers.append(HeaderEntry(key: "Authorization", value: token))
                                 }
                             } label: {
                                 Label("Add Token", systemImage: "key.fill")
