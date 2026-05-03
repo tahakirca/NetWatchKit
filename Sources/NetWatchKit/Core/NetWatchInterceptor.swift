@@ -62,15 +62,15 @@ final class NetWatchInterceptor: URLProtocol, @unchecked Sendable {
     }
 
     private static func drain(_ stream: InputStream) -> Data? {
-        stream.open()
+        if stream.streamStatus == .notOpen { stream.open() }
         defer { stream.close() }
         var data = Data()
         let bufferSize = 4096
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         defer { buffer.deallocate() }
-        while stream.hasBytesAvailable {
+        while true {
             let read = stream.read(buffer, maxLength: bufferSize)
-            if read < 0 { return nil }
+            if read < 0 { return data.isEmpty ? nil : data }
             if read == 0 { break }
             data.append(buffer, count: read)
         }
