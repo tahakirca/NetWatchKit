@@ -226,6 +226,77 @@ struct RequestBuilderView: View {
                 // MARK: - Response
                 if let result {
                     VStack(spacing: 0) {
+                        // Sent request recap
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Request")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(alignment: .top, spacing: 8) {
+                                    Text(result.sentRequest.method)
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(methodColor(result.sentRequest.method))
+                                        .foregroundStyle(.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                    Text(result.sentRequest.url)
+                                        .font(.system(.caption2, design: .monospaced))
+                                        .textSelection(.enabled)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+
+                                if !result.sentRequest.headers.isEmpty {
+                                    DisclosureGroup {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            ForEach(result.sentRequest.headers.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                                                HStack(alignment: .top, spacing: 4) {
+                                                    Text(key)
+                                                        .font(.system(.caption2, design: .monospaced).weight(.semibold))
+                                                        .foregroundStyle(.blue)
+                                                    Text(value)
+                                                        .font(.system(.caption2, design: .monospaced))
+                                                        .foregroundStyle(.secondary)
+                                                        .textSelection(.enabled)
+                                                }
+                                            }
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.vertical, 4)
+                                    } label: {
+                                        Text("Request Headers (\(result.sentRequest.headers.count))")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+
+                                if let body = result.sentRequest.body, !body.isEmpty {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text("Body")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.secondary)
+
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            Text(Formatting.prettyJSON(body))
+                                                .font(.system(.caption2, design: .monospaced))
+                                                .textSelection(.enabled)
+                                                .padding(10)
+                                        }
+                                        .frame(maxHeight: 200)
+                                        .background(Color(.tertiarySystemBackground))
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 12)
+
                         // Status bar
                         HStack {
                             Text("\(result.statusCode)")
@@ -331,13 +402,24 @@ struct RequestBuilderView: View {
         var request = URLRequest(url: requestURL)
         request.httpMethod = method
 
+        var sentHeaders: [String: String] = [:]
         for header in headers where !header.key.isEmpty {
             request.setValue(header.value, forHTTPHeaderField: header.key)
+            sentHeaders[header.key] = header.value
         }
 
+        var sentBody: String?
         if hasBody, !bodyText.isEmpty {
             request.httpBody = bodyText.data(using: .utf8)
+            sentBody = bodyText
         }
+
+        let sent = SentRequest(
+            method: method,
+            url: url,
+            headers: sentHeaders,
+            body: sentBody
+        )
 
         isLoading = true
         withAnimation(.snappy(duration: 0.2)) { result = nil }
@@ -356,7 +438,8 @@ struct RequestBuilderView: View {
                             headers: [:],
                             body: error.localizedDescription,
                             duration: Formatting.duration(duration),
-                            size: "0B"
+                            size: "0B",
+                            sentRequest: sent
                         )
                     }
                     return
@@ -377,7 +460,8 @@ struct RequestBuilderView: View {
                         headers: stringHeaders,
                         body: bodyString.map { Formatting.prettyJSON($0) },
                         duration: Formatting.duration(duration),
-                        size: Formatting.size(data?.count ?? 0)
+                        size: Formatting.size(data?.count ?? 0),
+                        sentRequest: sent
                     )
                 }
             }
@@ -415,4 +499,12 @@ private struct BuilderResult {
     let body: String?
     let duration: String
     let size: String
+    let sentRequest: SentRequest
+}
+
+private struct SentRequest {
+    let method: String
+    let url: String
+    let headers: [String: String]
+    let body: String?
 }
