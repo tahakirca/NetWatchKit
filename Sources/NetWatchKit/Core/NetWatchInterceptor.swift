@@ -36,10 +36,12 @@ final class NetWatchInterceptor: URLProtocol, @unchecked Sendable {
         URLProtocol.setProperty(true, forKey: Self.handledKey, in: mutableRequest)
 
         // URLSession converts httpBody → httpBodyStream before URLProtocol sees it.
-        // Drain the stream so the body can be recorded and the forwarded request keeps it.
-        if mutableRequest.httpBody == nil, let stream = mutableRequest.httpBodyStream,
+        // Drain the stream so the body can be both recorded and forwarded.
+        var resolvedBody: Data? = mutableRequest.httpBody
+        if resolvedBody == nil, let stream = mutableRequest.httpBodyStream,
            let drained = Self.drain(stream)
         {
+            resolvedBody = drained
             mutableRequest.httpBody = drained
             mutableRequest.httpBodyStream = nil
         }
@@ -56,8 +58,15 @@ final class NetWatchInterceptor: URLProtocol, @unchecked Sendable {
         lock.withLock { currentRecordID = record.id }
         NetWatch.addRecordFromBackground(record)
 
-        // Forward real request
-        dataTask = session.dataTask(with: mutableRequest as URLRequest)
+        // Forward — when there's a body, use `uploadTask(with:from:)` so the
+        // payload survives the NSMutableURLRequest → URLRequest bridge.
+        // `dataTask(with:)` is known to silently drop httpBody on some
+        // iOS releases when the request originally carried an httpBodyStream.
+        if let body = resolvedBody {
+            dataTask = session.uploadTask(with: normalizedRequest, from: body)
+        } else {
+            dataTask = session.dataTask(with: normalizedRequest)
+        }
         dataTask?.resume()
     }
 
