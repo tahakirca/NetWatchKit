@@ -36,6 +36,14 @@ struct RequestDetailView: View {
                 }
             }
 
+            if !queryItems.isEmpty {
+                Section("Query Parameters") {
+                    ForEach(Array(queryItems.enumerated()), id: \.offset) { _, item in
+                        HeaderRow(key: item.name, value: item.value ?? "")
+                    }
+                }
+            }
+
             if !record.request.headers.isEmpty {
                 Section("Request Headers") {
                     ForEach(record.request.headers.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
@@ -89,6 +97,10 @@ struct RequestDetailView: View {
                 existingBody: record.response?.bodyString
             )
         }
+    }
+
+    private var queryItems: [URLQueryItem] {
+        URLComponents(string: record.request.url)?.queryItems ?? []
     }
 
     private var shortPath: String {
